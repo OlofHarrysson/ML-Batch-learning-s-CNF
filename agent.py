@@ -1,9 +1,16 @@
 import numpy as np
+import sys
+import itertools
+from collections import Counter
 
 class Agent:
     def __init__(self, epsilon, delta):
         self.epsilon = epsilon
         self.delta = delta
+        self.model = None
+        self.prev_interp = None
+        self.prev_pred = None
+        self.oracle = None # TODO REMOVE
 
     def compute_required_training_dataset_size(self):
         # TODO - compute your value here.
@@ -11,37 +18,71 @@ class Agent:
         return 100
 
     def process_first_observation(self, interpretation):
-        # TODO - do something with interpretation and return
-        # a prediction
+        # TODO: you can't check reward here. Anything else?
+        self.prev_interp = interpretation
         return False
 
     def predict(self, interpretation, reward):
-        if reward is not None:
-            ...
-            # We are in training branch
-            #
-            # Use the reward and the previous interpretation and
-            # the previous prediction to update your model.
-            # Then make a prediction for the given interpretation.
-        else:
-            ...
-            # We are in testing branch
-            # Only make a prediction.
+        prediction = None
 
-        return False # TODO - return your prediction
+        if reward is not None:
+
+            if reward is 0: # Only change model if guess was wrong
+
+                for version in self.model[:]: # Iterate over a copy
+                    if version[0] == tuple(self.prev_interp) and version[1] == self.prev_pred:
+                        self.model.remove(version)
+                        break
+
+
+        else: # TODO: Need this else?
+            pass
+
+        for version in self.model:
+            if version[0] == tuple(interpretation):
+                prediction = version[1]
+                break
+
+        return prediction
 
     def interact_with_oracle(self, oracle_session):
-        # You may alter this method as you desire,
-        # but it is not required.
+        self.oracle = oracle_session # TODO REMOVE
 
-        self.n_variables, self.j = oracle_session.request_parameters()
+        self.n_variables, self.j = oracle_session.request_parameters() # X1
+        self.init_model()
 
-        m = self.compute_required_training_dataset_size()
-        first_sample = oracle_session.request_dataset(m)
-        prediction = self.process_first_observation(first_sample)
+        m = self.compute_required_training_dataset_size() # Y1
+        first_sample = oracle_session.request_dataset(m) # X2
+
+        prediction = self.process_first_observation(first_sample) # Y2
+        self.prev_pred = prediction
 
         while oracle_session.has_more_samples():
-            interpretation, reward = oracle_session.predict(prediction)
-            prediction = self.predict(interpretation, reward)
+            interpretation, reward = oracle_session.predict(prediction) # X3
+            prediction = self.predict(interpretation, reward) # Y3
+            self.prev_pred = prediction
+            self.prev_interp = interpretation
+
+
+# Manually debug while loop
+# print(reward)
+# print("Loop ------")
+# print(interpretation)
+# print(oracle_session.getcnf())
+# pause()
+
+    def init_model(self):
+        permutation = list(itertools.product([True, False], repeat=self.n_variables))
+        model = []
+        for version in permutation:
+            model.append((version, False))
+            model.append((version, True))
+
+        self.model = model
+
+
+def pause():
+    programPause = input("Press the <ENTER> key to continue...")
+
 
 

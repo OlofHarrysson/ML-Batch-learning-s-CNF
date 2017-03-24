@@ -13,9 +13,12 @@ class OracleSession:
     def request_parameters(self):
         return (self.n_variables, self.j)
 
+    def getcnf(self): # TODO REMOVE
+        return self.__cnf
+
     def get_requested_dataset_size(self):
         return self.__m
-    
+
     def request_dataset(self, m):
         if  m <= 0:
             raise ValueError("Requested dataset size must be positive.")
@@ -35,7 +38,7 @@ class OracleSession:
     def predict(self, prediction):
         reward = int(prediction == self.__evaluations[self.__i])
         if self.__i > self.__m:
-            self.__test_reward += reward 
+            self.__test_reward += reward
             reward = None
 
         if self.has_more_samples():
