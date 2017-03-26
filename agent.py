@@ -10,7 +10,6 @@ class Agent:
         self.model = None
         self.prev_interp = None
         self.prev_pred = None
-        self.oracle = None # TODO REMOVE
 
     def compute_required_training_dataset_size(self):
         # TODO - compute your value here.
@@ -46,8 +45,6 @@ class Agent:
         return prediction
 
     def interact_with_oracle(self, oracle_session):
-        self.oracle = oracle_session # TODO REMOVE
-
         self.n_variables, self.j = oracle_session.request_parameters() # X1
         self.init_model()
 
@@ -63,13 +60,6 @@ class Agent:
             self.prev_pred = prediction
             self.prev_interp = interpretation
 
-
-# Manually debug while loop
-# print(reward)
-# print("Loop ------")
-# print(interpretation)
-# print(oracle_session.getcnf())
-# pause()
 
     def init_model(self):
         permutation = list(itertools.product([True, False], repeat=self.n_variables))

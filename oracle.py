@@ -13,8 +13,6 @@ class OracleSession:
     def request_parameters(self):
         return (self.n_variables, self.j)
 
-    def getcnf(self): # TODO REMOVE
-        return self.__cnf
 
     def get_requested_dataset_size(self):
         return self.__m
