@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import itertools
 from collections import Counter
+import math
 
 class Agent:
     def __init__(self, epsilon, delta):
@@ -12,9 +13,14 @@ class Agent:
         self.prev_pred = None
 
     def compute_required_training_dataset_size(self):
-        # TODO - compute your value here.
-        # It should depend on self.n_variables and self.j, self.epsilon and self.delta.
-        return 100
+        lit_len = len(self.model)
+        e = self.epsilon
+        d = self.delta
+
+        k = 1 / e * math.log(lit_len / d)
+        k = int(k+1)
+
+        return k
 
     def process_first_observation(self, interpretation):
         # TODO: you can't check reward here. Anything else?
@@ -27,22 +33,23 @@ class Agent:
         if reward is not None:
 
             if reward is 0: # Only change model if guess was wrong
+                model = []
+                for version in self.model:
+                    if self.check_sat(version, self.prev_interp):
+                        model.append(version)
 
-                for version in self.model[:]: # Iterate over a copy
-                    if version[0] == tuple(self.prev_interp) and version[1] == self.prev_pred:
-                        self.model.remove(version)
-                        break
+                self.model = model
 
-
-        else: # TODO: Need this else?
-            pass
-
-        for version in self.model:
-            if version[0] == tuple(interpretation):
-                prediction = version[1]
-                break
+            prediction = False # TODO: Always predict False in training phase? If remove, need to check the update loop
+        else:
+            prediction = True
+            for version in self.model:
+                if self.check_sat(version, interpretation) == False:
+                    prediction = False
+                    break
 
         return prediction
+
 
     def interact_with_oracle(self, oracle_session):
         self.n_variables, self.j = oracle_session.request_parameters() # X1
@@ -62,17 +69,27 @@ class Agent:
 
 
     def init_model(self):
-        permutation = list(itertools.product([True, False], repeat=self.n_variables))
-        model = []
-        for version in permutation:
-            model.append((version, False))
-            model.append((version, True))
+        n = self.n_variables
+        j = self.j
 
-        self.model = model
+        perm = list(itertools.product([True, False ,None], repeat=n))
+
+        allowed_clauses = []
+        for clause in perm:
+            nbr_None = clause.count(None)
+            if nbr_None >= n - j and nbr_None < n:
+                allowed_clauses.append(clause)
+
+        self.model = allowed_clauses
+
+
+    def check_sat(self, version, inter):
+        for i, var in enumerate(inter):
+            if var == version[i]:
+                return True
+
+        return False
 
 
 def pause():
     programPause = input("Press the <ENTER> key to continue...")
-
-
-
