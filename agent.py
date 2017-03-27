@@ -17,10 +17,10 @@ class Agent:
         e = self.epsilon
         d = self.delta
 
-        k = 1 / e * math.log(lit_len / d)
-        k = int(k+1)
+        m = lit_len / e * math.log(lit_len / d)
+        m = int(m+1)
 
-        return k
+        return m
 
     def process_first_observation(self, interpretation):
         # TODO: you can't check reward here. Anything else?
