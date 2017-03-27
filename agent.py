@@ -23,11 +23,15 @@ class Agent:
         return m
 
     def process_first_observation(self, interpretation):
-        # TODO: you can't check reward here. Anything else?
         self.prev_interp = interpretation
-        return False
+        prediction = True
+        for version in self.model:
+            if self.check_sat(version, interpretation) == False:
+                prediction = False
+                break
+        return prediction
 
-    def predict(self, interpretation, reward, oracle):
+    def predict(self, interpretation, reward):
         prediction = None
 
         if reward is not None:
@@ -43,26 +47,12 @@ class Agent:
 
                 self.model = model
 
-                if self.prev_pred == True and len_m != len(self.model): # This NEVER happens
-                    print(len_m)
-                    print(len(self.model))
-                    print(self.prev_interp)
-                    print(self.prev_pred)
-                    print(old_m)
-                    print(self.model)
-                    print(oracle.getcnf())
-                    pause()
-
-
-
-
             prediction = True
             for version in self.model:
                 if self.check_sat(version, interpretation) == False:
                     prediction = False
                     break
 
-            # prediction = False # TODO: Always predict False in training phase? If remove, need to check the update loop
         else:
             prediction = True
             for version in self.model:
@@ -83,11 +73,9 @@ class Agent:
         prediction = self.process_first_observation(first_sample) # Y2
         self.prev_pred = prediction
 
-        # pause()
-
         while oracle_session.has_more_samples():
             interpretation, reward = oracle_session.predict(prediction) # X3
-            prediction = self.predict(interpretation, reward,oracle_session) # Y3
+            prediction = self.predict(interpretation, reward) # Y3
             self.prev_pred = prediction
             self.prev_interp = interpretation
 
